@@ -1,18 +1,17 @@
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
 
 
 def get_data(config):
     ds_raw = load_dataset(f"{config['datasource']}", split='train[:10]')
 
+    data = []
     for item in ds_raw:
         context = item["context"]
         question = item["question"]
         answers = item["answers"]["text"][0]
-
-        data = []
 
         data.append({
             "context":context,
@@ -72,3 +71,16 @@ class SquadDataset(Dataset):
             "start_positions": torch.tensor(start_token),
             "end_positions": torch.tensor(end_token),
         }
+
+
+def build_dataloader(data, tokenizer):
+
+    dataset = SquadDataset(data, tokenizer)
+
+    loader = DataLoader(
+        dataset,
+        batch_size=8,
+        shuffle=True
+    )
+
+    return loader
