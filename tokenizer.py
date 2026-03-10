@@ -1,5 +1,6 @@
 from tokenizers import Tokenizer, decoders, normalizers, pre_tokenizers, processors
 from tokenizers.models import WordPiece
+from tokenizers.trainers import WordPieceTrainer
 
 
 class BertTokenizer:
@@ -60,3 +61,30 @@ class BertTokenizer:
 
         # decoder
         self._tokenizer.decoder = decoders.WordPiece(prefix="##")
+
+    def train(self, iterator):
+
+        trainer = WordPieceTrainer(
+            vocab_size=10000,
+            special_tokens=[
+                self.pad_token,
+                self.unk_token,
+                self.cls_token,
+                self.sep_token,
+                self.mask_token
+            ]
+        )
+
+        self._tokenizer.train_from_iterator(iterator, trainer)
+
+    @staticmethod
+    def get_sentences(data):
+        for item in data:
+            yield item["context"]
+            yield item["question"]
+
+    @classmethod
+    def train_tokenizer(cls, data):
+        tokenizer = cls()
+        tokenizer.train(cls.get_sentences(data))
+        return tokenizer
