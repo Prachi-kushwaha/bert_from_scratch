@@ -2,6 +2,10 @@ import torch
 import torch.nn as nn
 import math
 
+from configuration import ModelConfig
+
+config = ModelConfig()
+
 class InputEmbeddings(nn.Module):
     def __init__(self, config):
         super().__init__()
@@ -11,7 +15,7 @@ class InputEmbeddings(nn.Module):
         self.segment_embeddings = nn.Embedding(config.segment_vocab_size, config.d_model)
 
         self.layerNorm = nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
-        self.dropout = nn.Dropout(config.hidden_layer_prob)
+        self.dropout = nn.Dropout(config.dropout_prob)
 
         self.register_buffer(
             "position_ids",
@@ -72,7 +76,7 @@ class MultiHeadAttentionBlock(nn.Module):
         assert self.d_model % self.h == 0, "d_model is not divisible by h"
 
         self.d_k = self.d_model // self.h
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(config.dropout_prob)
         self.w_q = nn.Linear(config.d_model, config.d_model)
         self.w_k = nn.Linear(config.d_model, config.d_model)
         self.w_v = nn.Linear(config.d_model, config.d_model)
@@ -112,7 +116,7 @@ class ResidualConnection(nn.Module):
 
     def __init__(self,features:int, config) -> None:
         super().__init__()
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(config.dropout_prob)
         self.norm = nn.LayerNorm(features)
 
     def forward(self, x, sublayer):
@@ -123,12 +127,12 @@ class FeedForwardBlock(nn.Module):
     def __init__(self, config) -> None:
         super().__init__()
         self.linear_1 = nn.Linear(config.d_model, config.d_ff)
-        self.dropout = nn.Dropout(config.dropout)
+        self.dropout = nn.Dropout(config.dropout_prob)
         self.linear_2 = nn.Linear(config.d_ff, config.d_model)
 
     def forward(self, x):
         #(Batch, seq_len, d_model) -> (Batch, seq_len, d_ff) --> (Batch, Seq_len, d_model)
-        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+        return self.linear_2(self.dropout(torch.gelu(self.linear_1(x))))
 
 class EncoderBlock(nn.Module):
 
@@ -136,7 +140,7 @@ class EncoderBlock(nn.Module):
         super().__init__()
         self.self_attention_block = self_attention_block
         self.feed_forward_block = feed_forward_block
-        self.residual_connections = nn.ModuleList([ResidualConnection(features,config.dropout) for _ in range(2)])
+        self.residual_connections = nn.ModuleList([ResidualConnection(features,config) for _ in range(2)])
 
     def forward(self, x, src_mask):
         x = self.residual_connections[0](x , lambda x: self.self_attention_block(x,x,x,src_mask))
@@ -153,7 +157,7 @@ class Encoder(nn.Module):
                 config.d_model,
                 MultiHeadAttentionBlock(config),
                 FeedForwardBlock(config),
-                config.dropout
+                config
             )
             for _ in range(config.num_hidden_layers)]
         )
