@@ -11,12 +11,12 @@ def get_data(config):
     for item in ds_raw:
         context = item["context"]
         question = item["question"]
-        answers = item["answers"]["text"][0]
+        answer = item["answer"]["text"][0]
 
         data.append({
             "context":context,
             "question":question,
-            "answers":answers
+            "answer":answer
         })
 
     return data

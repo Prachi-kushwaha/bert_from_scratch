@@ -1,6 +1,7 @@
+import math
 import torch
 import torch.nn as nn
-import math
+import torch.nn.functional as F
 
 from configuration import ModelConfig
 
@@ -132,7 +133,7 @@ class FeedForwardBlock(nn.Module):
 
     def forward(self, x):
         #(Batch, seq_len, d_model) -> (Batch, seq_len, d_ff) --> (Batch, Seq_len, d_model)
-        return self.linear_2(self.dropout(torch.gelu(self.linear_1(x))))
+        return self.linear_2(self.dropout(F.gelu(self.linear_1(x))))
 
 class EncoderBlock(nn.Module):
 
@@ -171,3 +172,26 @@ class Encoder(nn.Module):
         return self.norm(x)
 
 
+class BertForQA(nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+
+        self.embeddings = InputEmbeddings(config)
+        self.encoder = Encoder(config)
+
+        self.qa_outputs = nn.Linear(config.d_model, 2)
+
+    def forward(self, input_ids, attention_mask):
+
+        x = self.embeddings(input_ids)
+
+        mask = attention_mask.unsqueeze(1).unsqueeze(2)
+
+        x = self.encoder(x, mask)
+
+        logits = self.qa_outputs(x)
+
+        start_logits, end_logits = logits.split(1, dim=-1)
+
+        return start_logits.squeeze(-1), end_logits.squeeze(-1)
