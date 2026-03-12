@@ -80,7 +80,8 @@ def build_dataloader(data, tokenizer):
     loader = DataLoader(
         dataset,
         batch_size=8,
-        shuffle=True
+        shuffle=True,
+        collate_fn=collate_fn
     )
 
     return loader
@@ -88,6 +89,7 @@ def build_dataloader(data, tokenizer):
 def collate_fn(batch):
 
     input_ids = [item["input_ids"] for item in batch]
+    attention_mask = [item["attention_mask"] for item in batch]
 
     input_ids = nn.utils.rnn.pad_sequence(
         input_ids,
@@ -95,4 +97,18 @@ def collate_fn(batch):
         padding_value=0
     )
 
-    return input_ids
+    attention_mask = nn.utils.rnn.pad_sequence(
+        attention_mask,
+        batch_first=True,
+        padding_value=0
+    )
+
+    start_positions = torch.tensor([item["start_positions"] for item in batch])
+    end_positions = torch.tensor([item["end_positions"] for item in batch])
+
+    return {
+        "input_ids": input_ids,
+        "attention_mask": attention_mask,
+        "start_positions": start_positions,
+        "end_positions": end_positions
+    }
