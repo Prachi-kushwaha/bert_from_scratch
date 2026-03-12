@@ -84,3 +84,15 @@ def build_dataloader(data, tokenizer):
     )
 
     return loader
+
+def collate_fn(batch):
+
+    input_ids = [item["input_ids"] for item in batch]
+
+    input_ids = nn.utils.rnn.pad_sequence(
+        input_ids,
+        batch_first=True,
+        padding_value=0
+    )
+
+    return input_ids
