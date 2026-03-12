@@ -52,6 +52,7 @@ class InputEmbeddings(nn.Module):
         # segment ids default
         if segment_ids is None:
             segment_ids = self.segment_ids[:, :seq_length]
+            segment_ids = segment_ids.expand(batch_size, seq_length)
 
         # position ids default
         if position_ids is None:
