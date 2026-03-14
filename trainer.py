@@ -1,8 +1,8 @@
 import torch
-import torchmetrics
 import torch.nn as nn
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.tensorboard import SummaryWriter
+from configuration import ModelConfig
 
 import warnings
 from tqdm import tqdm
@@ -55,3 +55,4 @@ class Trainer:
             total_loss += loss.item()
 
         return total_loss / len(self.dataloader)
+

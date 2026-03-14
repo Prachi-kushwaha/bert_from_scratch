@@ -4,8 +4,8 @@ from torch.utils.data import Dataset, DataLoader
 from datasets import load_dataset
 
 
-def get_data(config):
-    ds_raw = load_dataset(f"{config['datasource']}", split='train[:10]')
+def get_data(datasource):
+    ds_raw = load_dataset(datasource, split='train[:10]')
 
     data = []
     for item in ds_raw:
