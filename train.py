@@ -12,7 +12,7 @@ def main():
     config = ModelConfig()
 
     # 1️⃣ Load dataset
-    data = get_data(config)
+    data = get_data(config.datasource)
 
     # 2️⃣ Train tokenizer
     tokenizer = BertTokenizer.train_tokenizer(data)
@@ -32,6 +32,7 @@ def main():
         loss = trainer.train_epoch()
 
         print("epoch:", epoch, "loss:", loss)
+        trainer.save_checkpoint(epoch)
 
 
 if __name__ == "__main__":
