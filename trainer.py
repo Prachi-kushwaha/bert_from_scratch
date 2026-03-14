@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.tensorboard import SummaryWriter
-from configuration import ModelConfig
+from configuration import Config
 
 import warnings
 from tqdm import tqdm
@@ -15,7 +15,7 @@ writer = SummaryWriter()
 
 class Trainer:
 
-    def __init__(self, model, dataloader, lr=3e-5, device="cpu"):
+    def __init__(self, model, dataloader, lr=3e-5, device="cuda"):
 
         self.model = model.to(device)
         self.dataloader = dataloader
@@ -53,7 +53,7 @@ class Trainer:
 
             total_loss += loss.item()
 
-        # 📊 TensorBoard logging
+        
             self.writer.add_scalar("train/loss", loss.item(), self.global_step)
 
             self.global_step += 1

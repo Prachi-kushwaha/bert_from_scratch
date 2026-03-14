@@ -1,6 +1,6 @@
 import torch
 
-from configuration import ModelConfig
+from configuration import Config
 from dataset import get_data, build_dataloader
 from tokenizer import BertTokenizer
 from model import BertForQA
@@ -9,24 +9,24 @@ from trainer import Trainer
 
 def main():
 
-    config = ModelConfig()
+    config = Config()
 
-    # 1️⃣ Load dataset
+    # Load dataset
     data = get_data(config.datasource)
 
-    # 2️⃣ Train tokenizer
+    # Train tokenizer
     tokenizer = BertTokenizer.train_tokenizer(data)
 
-    # 3️⃣ Build dataloader
+    # Build dataloader
     loader = build_dataloader(data, tokenizer)
 
-    # 4️⃣ Build model
+    # Build model
     model = BertForQA(config)
 
-    # 5️⃣ Trainer
+    # Trainer
     trainer = Trainer(model, loader)
 
-    # 6️⃣ Training loop
+    # Training loop
     for epoch in range(3):
 
         loss = trainer.train_epoch()

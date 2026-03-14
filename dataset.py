@@ -5,18 +5,18 @@ from datasets import load_dataset
 
 
 def get_data(datasource):
-    ds_raw = load_dataset(datasource, split='train[:10]')
+    ds_raw = load_dataset(datasource, split='train[:50000]')
 
     data = []
     for item in ds_raw:
         context = item["context"]
         question = item["question"]
-        answer = item["answer"]["text"][0]
+        answers = item["answers"]["text"][0]
 
         data.append({
             "context":context,
             "question":question,
-            "answer":answer
+            "answers":answers
         })
 
     return data
@@ -37,18 +37,15 @@ class SquadDataset(Dataset):
 
         context = item["context"]
         question = item["question"]
-        answer_text = item["answer"]
+        answer_text = item["answers"]
         answer_start = context.find(answer_text)
 
         # encode question + context
-        encoding = self.tokenizer._tokenizer.encode(
-            question,
-            context
-        )
+        encoding = self.tokenizer._tokenizer.encode(question, context)
 
-        input_ids = encoding.ids
-        attention_mask = encoding.attention_mask
-        offsets = encoding.offsets
+        input_ids = encoding.ids[:self.max_length]
+        attention_mask = encoding.attention_mask[:self.max_length]
+        offsets = encoding.offsets[:self.max_length]
 
         start_token = 0
         end_token = 0
@@ -75,7 +72,7 @@ class SquadDataset(Dataset):
 
 def build_dataloader(data, tokenizer):
 
-    dataset = SquadDataset(data, tokenizer)
+    dataset = SquadDataset(data, tokenizer, max_length=384)
 
     loader = DataLoader(
         dataset,
